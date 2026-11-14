@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Sàn Quẩy Ngã Tư Ea Kao - Niê Ngọc Hiếu</title>
+<style>
+*{box-sizing:border-box;user-select:none;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:#09050f;color:#fff;font-family:sans-serif;display:flex;flex-direction:column;align-items:center}
+#top{width:100%;max-width:420px;display:flex;gap:6px;padding:8px;background:#1a0b2e;border-bottom:2px solid #e040fb}
+input{flex:1;padding:10px;border-radius:10px;border:1px solid #e040fb;background:#2a124a;color:#fff;font-size:15px}
+.go{padding:10px 14px;background:#ff9800;color:#000;font-weight:bold;border:none;border-radius:10px}
+canvas{width:100%;max-width:420px;height:400px;display:block}
+#bar{width:100%;max-width:420px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;padding:8px}
+.act{padding:12px 4px;font-size:13px;font-weight:bold;border:none;border-radius:10px;color:#fff;background:linear-gradient(#7b1fa2,#4a148c);box-shadow:0 3px 0 #ea80fc}
+.act:active{transform:translateY(3px)}
+</style>
+</head>
+<body>
+<div id="top"><input id="nm" placeholder="Nhập tên bạn để lên sàn..." maxlength="14"><button class="go" onclick="join()">LÊN SÀN!</button></div>
+<canvas id="c" width="420" height="400"></canvas>
+<div id="bar">
+  <button class="act" onclick="fx(1)">🍦 ĂN KEM BAY</button>
+  <button class="act" onclick="fx(2)">☕ CÀ PHÊ SUNG</button>
+  <button class="act" onclick="fx(3)">📸 ZOOM A HIẾU</button>
+</div>
+<script>
+const cv=document.getElementById("c"),ctx=cv.getContext("2d");
+let ac,beat=0,spd=360,iv,me="Khách Vip",mode=0,mt=0,zoom=1;
+let bots="Hiếu Chủ Quán,210,135,#ff9800|Bé Mơ,120,250,#ff4081|Tèo Cà Phê,290,260,#00e5ff|Út Ea Kao,95,320,#69f0ae|Dân Chơi,320,325,#ffd740|Bạn Mới,210,295,#e040fb";
+
+function playBeat(){
+  if(!ac)return;
+  let o=ac.createOscillator(),g=ac.createGain();
+  o.type="triangle";o.frequency.setValueAtTime(140,ac.currentTime);
+  o.frequency.exponentialRampToValueAtTime(38,ac.currentTime+0.15);
+  g.gain.setValueAtTime(0.45,ac.currentTime);g.gain.exponentialRampToValueAtTime(0.01,ac.currentTime+0.18);
+  o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+0.18);
+  if(beat%2===1){
+    let o2=ac.createOscillator(),g2=ac.createGain();
+    o2.type="square";o2.frequency.setValueAtTime(440+(beat%4)*110,ac.currentTime);
+    g2.gain.setValueAtTime(0.08,ac.currentTime);g2.gain.exponentialRampToValueAtTime(0.01,ac.currentTime+0.12);
+    o2.connect(g2);g2.connect(ac.destination);o2.start();o2.stop(ac.currentTime+0.12);
+  }
+  beat++;
+}
+
+function startMusic(){
+  if(!ac){ac=new(window.AudioContext||window.webkitAudioContext)();}
+  if(ac.state==="suspended")ac.resume();
+  clearInterval(iv);iv=setInterval(playBeat,spd);
+}
+
+function join(){
+  let v=document.getElementById("nm").value.trim();
+  if(v)me=v;
+  startMusic();fx(1);
+}
+
+function fx(m){
+  startMusic();mode=m;mt=90;
+  if(m===2){spd=220;clearInterval(iv);iv=setInterval(playBeat,spd);}
+  else{spd=360;clearInterval(iv);iv=setInterval(playBeat,spd);}
+  zoom=m===3?1.35:1;
+}
+
+function drawDancer(x,y,cl,name,isMe){
+  let b=Math.sin(beat*1.5+x)*6,fly=(isMe&&mode===1)?-55+Math.sin(mt*0.2)*10:0;
+  let dy=y+fly;
+  ctx.fillStyle="rgba(0,0,0,0.45)";ctx.beginPath();ctx.ellipse(x,y+24,20,7,0,0,Math.PI*2);ctx.fill();
+  ctx.save();ctx.translate(x,dy+b);
+  if(isMe&&mode===2)ctx.rotate(Math.sin(mt*0.5)*0.25);
+  ctx.fillStyle=cl;ctx.fillRect(-11,-8,22,26);
+  ctx.fillStyle="#ffcc80";ctx.beginPath();ctx.arc(0,-19,10,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle="#212121";ctx.beginPath();ctx.arc(0,-22,10,Math.PI,0);ctx.fill();
+  ctx.strokeStyle="#ffcc80";ctx.lineWidth=4;ctx.beginPath();
+  ctx.moveTo(-11,-2);ctx.lineTo(-20,-14+b);ctx.moveTo(11,-2);ctx.lineTo(20,-14-b);ctx.stroke();
+  if(isMe&&mode===1){ctx.fillStyle="#fff";ctx.fillRect(16,-22,6,12);ctx.fillStyle="#ff80ab";ctx.beginPath();ctx.arc(19,-25,7,0,Math.PI*2);ctx.fill();}
+  ctx.fillStyle=isMe?"#ffea00":"#fff";ctx.font="bold 11px sans-serif";ctx.textAlign="center";
+  ctx.fillText(name,0,-35);ctx.restore();
+}
+
+function loop(){
+  ctx.clearRect(0,0,420,400);
+  if(mt>0){mt--;if(mt===0){mode=0;zoom=1;spd=360;clearInterval(iv);iv=setInterval(playBeat,spd);}}
+  ctx.save();
+  if(zoom>1){ctx.translate(210,220);ctx.scale(zoom,zoom);ctx.translate(-210,-240);}
+  let cols="#ff1744|#00e5ff|#d500f9|#76ff03",lc=cols.split("|").at(beat%4);
+  ctx.fillStyle="#120822";ctx.fillRect(0,0,420,400);
+  ctx.fillStyle="#28114b";ctx.beginPath();ctx.moveTo(40,180);ctx.lineTo(380,180);ctx.lineTo(420,380);ctx.lineTo(0,380);ctx.closePath();ctx.fill();
+
+  for(let i=0;i<5;i++){
+    ctx.strokeStyle=lc;ctx.globalAlpha=0.22;ctx.lineWidth=14;
+    ctx.beginPath();ctx.moveTo(60+i*75,0);ctx.lineTo(30+i*90+Math.sin(beat+i)*60,380);ctx.stroke();
+  }
+  ctx.globalAlpha=1;
+
+  ctx.fillStyle="#ff9800";ctx.fillRect(110,145,200,42);
+  ctx.fillStyle="#1a0b2e";ctx.font="bold 12px sans-serif";ctx.textAlign="center";
+  ctx.fillText("TẠP HÓA & KEM TƯƠI EA KAO",210,164);
+  ctx.fillStyle="#fff";ctx.font="10px sans-serif";ctx.fillText("DJ: NIÊ NGỌC HIẾU",210,180);
+
+  bots.split("|").forEach((s,idx)=>{
+    let p=s.split(","),isMe=idx===5;
+    drawDancer(Number(p.at(1)),Number(p.at(2)),p.at(3),isMe?me:p.at(0),isMe);
+  });
+  ctx.restore();
+
+  ctx.fillStyle="rgba(255,255,255,0.7)";ctx.font="11px sans-serif";ctx.textAlign="center";
+  ctx.fillText("© Tác giả: Niê Ngọc Hiếu - Bấm LÊN SÀN để bật nhạc & quẩy!",210,393);
+  requestAnimationFrame(loop);
+}
+loop();
+</script>
+</body>
+</html>
